@@ -12,11 +12,11 @@ git clone https://github.com/RollerVincent/coactome-git.git
 
 download experimental data and process statistics
 ```
-cd git-coactome/preprocessing
+cd coactome-git/preprocessing
 python3 data.py -pre mouse_differential.experiments.csv
 ```
 
 The last command takes several minutes.
 The data is saved to coactome-root/data/experiments
 
-Java project located at coactome-root/git-coactome/java
+Java project located at coactome-root/coactome-git/java
