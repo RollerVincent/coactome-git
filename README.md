@@ -1,4 +1,4 @@
-# git-coactome
+# coactome-git
 
 
 * Setup
