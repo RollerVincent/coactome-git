@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="../../../../coactome-git/vis/res/nice.js"></script>
+  </head>
+  <body style = "margin:0px; padding:0px;">
+		<div style="text-align:center;">
+			<div style = "margin-top:25px; font-size:24px; font-weight:bolder; font-family:Courier New;">Fold Change Ratio Analysis</div>
+			<div id = "gid" style = "margin-top:20px; font-size:22px; font-family:Courier New;">Loading ...</div>
+		</div>
+		<div style = "margin-left:50px; margin-top:30px; font-size:16px; font-family:Courier New;">Overview</div>
+		<div style = "margin-top:5; margin-bottom:20px; width:100vw; height:2px; background-color:#000000; "></div>
+		<div style="display:flex;">
+			<div id="plot_1"></div>
+			<div style="margin:20px; margin-top:50px; font-family:'Courier New', Courier, monospace; font-size: 12px;">
+				This summary contains the results of the fold change ratio analysis for gene *.
+			</div>
+		</div>
+		
+		
+		<div style = "margin-left:50px; margin-top:30px; font-size:16px; font-family:Courier New;">General p value distribution</div>
+		<div style = "margin-top:5; width:100vw; height:2px; background-color:#000000; "></div>
+		<div id="plot_2" style="float:left;"></div>
+		<div id="plot_3" style="float:left; margin-left:50px;"></div>
+		
+    <script>
+      
+		var w = screen.width;
+	
+		document.getElementById("plot_1").style.width = w/3.0 + "px";
+		document.getElementById("plot_1").style.height = w/3.0 + "px";
+		
+		document.getElementById("plot_2").style.width = w/4.0 + "px";
+		document.getElementById("plot_2").style.height = w/4.0 + "px";
+		
+		document.getElementById("plot_3").style.width = w/4.0 + "px";
+		document.getElementById("plot_3").style.height = w/4.0 + "px";
+		
+	    nice.load('js/*+*_data.js', function(){
+			var plot_1 = nice.plot('plot_1');
+			var plot_2 = nice.plot('plot_2');
+			var plot_3 = nice.plot('plot_3');
+		
+			plot_1.histogram2D(fcra.means, fcra.variances, 100, 100);
+			plot_1.axisTitles("mean", "variance");
+		  
+			
+			var cols = [];
+
+
+			for (let i = 0; i < fcra.fdrs.length; i++) {
+				const fdr = fcra.fdrs[i];
+				if(fcra.variancesZscore[i] < -2 && fcra.means[i] > 0){
+					if(fdr <= 0.00001){
+						cols.push('rgb(200,100,100)');
+					}
+					else if(fdr <= 0.001){
+						cols.push('rgb(100,100,200)');
+					}
+					else if(fdr <= 0.5){
+						cols.push('rgb(100,200,100)');
+					}
+					else{
+						cols.push('rgb(100,100,100)');
+					}
+				}else{
+					cols.push('rgb(100,100,100)');
+				}
+
+
+			}
+
+
+
+			
+
+
+			plot_3.scatter(fcra.means, fcra.variances, 2, cols, 0.5);
+			plot_3.axisTitles("mean", "variance");
+
+			
+			plot_2.histogram(fcra.pvalues, 20, '#aaaaee');
+			plot_2.axisTitles("p value", "count"); 
+
+			document.getElementById("gid").innerHTML = fcra.id;
+			
+        });
+
+	  </script>
+  </body>
+</html>
