@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="./js/nice.js"></script>
+  </head>
+  <body style = "margin:0px; padding:0px; background-color:rgb(40,43,47); overflow: hidden;">
+    <div id = "container"></div>  
+  </body>
+  <script>
+      var display = nice.display('container');
+      nice.load('./js/data.js', function(){
+        display.network(network);
+      });
+  </script>
+</html>

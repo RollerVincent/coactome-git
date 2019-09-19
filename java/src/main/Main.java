@@ -1,38 +1,45 @@
 package main;
 
 import coactome.*;
+import force_direction.Particle;
+import force_direction.ParticleSystem;
+import force_direction.Simulation;
 import parser.Parser;
-import visualization.Visualization;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        FCRA_Network(1e-13, 0.25, -3);
+
+
+    
 
     }
 
-    public static void foldChangeRatioAnalysis(){
+    public static void foldChangeRatioAnalysis(String out, String gene_list, String gene_fc, int minDataPoints, int backgroundSize){
 
         Analysis analysis = new Analysis();
-        analysis.setOutputDir("../../results/mouse_differential");
-        analysis.setGenes("../../data/experiments/mouse_differential/gene_list.txt");
-        analysis.addValues("../../data/experiments/mouse_differential/gene_fc.txt");
+
+        //analysis.setOutputDir("../../results/mouse_differential");
+        analysis.setOutputDir(out);
+
+        //analysis.setGenes("../../data/experiments/mouse_differential/gene_list.txt");
+        analysis.setGenes(gene_list);
+
+        //analysis.addValues("../../data/experiments/mouse_differential/gene_fc.txt");
+        analysis.addValues(gene_fc);
 
         System.out.println("Data initialized starting analysis ...");
 
         int total = analysis.getGenes().length;
         int count = 1;
         for (Gene gene : analysis.getGenes().all()) {
-            analysis.FCRA(gene.id,300, 1000, false);
+            // minDataPoints 300    backgroundSize 1000
+            analysis.FCRA(gene.id, minDataPoints, backgroundSize, false);
             System.out.printf("\r%s", "Running FCRA :  " + count + " / " + total + "  (" + gene.id + ")");
             count += 1;
         }
@@ -40,14 +47,11 @@ public class Main {
 
     }
 
-
-    public static void FCRA_Network(double fdr_cutoff, double mean_cutoff, double varz_cutoff){
+    public static void FCRA_Network(String fcra, double fdr_cutoff, double mean_cutoff, double varz_cutoff, int removalCost){
 
         Network network = new Network();
 
-        String dir = "../../results/mouse_differential/fcra";
-
-        Iterator<Path> files = Parser.FileIterator(dir);
+        Iterator<Path> files = Parser.FileIterator(fcra);
         int count = 1;
 
         while(files.hasNext()){
@@ -57,23 +61,13 @@ public class Main {
 
             String gene = split[split.length - 2];
 
-
-
-
-
             if(gene.startsWith("ENS") && split[split.length - 1].equals("results.tsv.zip")) {
-
                 System.out.printf("\r%s", "Loading :  " + gene + " (" + count + ")  ");
                 count += 1;
-
-
                 if (!network.nodes.containsKey(gene)){
                     network.nodes.put(gene, new Node(gene));
                 }
-
                 Node node = network.nodes.get(gene);
-
-
 
                 BufferedReader reader = Parser.ZipReader(path);
                 if(reader != null) {
@@ -90,9 +84,7 @@ public class Main {
                             }
 
                             String[] data = line.split("\t");
-
                             String other = data[0];
-
 
                             float fdr = Float.valueOf(data[2]);
                             float mean = Float.valueOf(data[3]);
@@ -104,13 +96,9 @@ public class Main {
                                 }
 
                                 Node other_node = network.nodes.get(other);
-
-
                                 node.links.add(other_node);
                                 other_node.links.add(node);
                             }
-
-
                         }
                         reader.close();
 
@@ -128,34 +116,53 @@ public class Main {
         }
         System.out.println();
 
-        Matrix matrix = network.toMatrix();
 
-        System.out.println("Matrix size is " + matrix.members.length);
+        network.setDoubles();
+        network.removeUndoubled();
 
+        Matrix matrix = network.toMatrix(true);
+
+
+        boolean verified = true;
         for (int i = 0; i < matrix.size; i++) {
             for (int j = i + 1; j < matrix.size; j++) {
-                if (matrix.data[i][j] == 1 && matrix.data[j][i] == 1){
-                    matrix.data[j][i] = 0;
-                }else if(matrix.data[i][j] == 1){
-                    matrix.data[i][j] = 0;
-                }else if(matrix.data[j][i] == 1){
-                    matrix.data[j][i] = 0;
+                if (matrix.data[i][j] != matrix.data[j][i]){
+                    System.out.println("Failed verifying matrix symmetry  (" + matrix.data[i][j] + " vs " + matrix.data[j][i] + ")");
+                    verified = false;
                 }
             }
         }
+        if(verified){
+            System.out.println("Successfully verified matrix symmetry");
+        }
 
+
+
+
+
+        int link_count = 0;
         for (int i = 0; i < matrix.size; i++) {
             for (int j = i + 1; j < matrix.size; j++) {
                 if (matrix.data[i][j] == 0){
                     matrix.data[i][j] = -1;
+                }else{
+                    link_count += 1;
+                    matrix.data[i][j] = removalCost;
                 }
             }
         }
 
-        System.out.println("Matrix successfully transformed to corresponding format");
+        System.out.println("Matrix successfully transformed to corresponding format with");
+        System.out.println("size " + matrix.size + " and "+ link_count + " positiv entries");
 
 
-        matrix.Save("/Users/vincentroller/Desktop/test_matrix.txt", false);
+
+
+
+
+
+
+        matrix.Save(fcra + "/networks/data/network_fdr_" + fdr_cutoff + "_mean_" + mean_cutoff + "_varz_" + varz_cutoff + "_cost_" + removalCost + "/matrix.txt", false);
 
 
 
@@ -168,5 +175,60 @@ public class Main {
 
 
     }
+
+    public static void ForceDirection(String network, String clustering, String attributes, String mode, double fppCutoff){
+
+
+        ParticleSystem system = ParticleSystem.FromNetworkFile(network);
+
+        System.out.println(system);
+
+        if(!clustering.equals("")){
+            system.loadClustering(clustering);
+        }
+
+        system.setSizes("degree");
+       // system.setSizes(3);
+
+        Simulation simulation = new Simulation();
+        simulation.setSystem(system);
+
+
+
+
+        simulation.run(fppCutoff);
+
+
+        simulation.correctCollisions();
+
+
+        if(mode.equals("go")){
+            Mapping mapping = Mapping.GO(attributes);
+
+
+            system.setAttributes(mapping);
+
+            simulation.GoTerms = attributes;
+        }
+
+
+        String o = "";
+        String[] s = network.split("/");
+        for (int i = 0; i < s.length - 1; i++) {
+            o += s[i] + "/";
+        }
+
+
+        simulation.save(o+"js/data.js");
+
+        Parser.Copy("../vis/res/network_template.html", o+"network.html");
+        Parser.Copy("../vis/res/nice.js", o+"js/nice.js");
+
+        System.out.println("\nSuccessfully saved network visualization to  " + o + "network.html");
+
+
+    }
+
+
 
 }

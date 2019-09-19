@@ -148,6 +148,7 @@ public class Parser {
         return null;
     }
 
+
     /***
      * returns reader for the first zip entry
      */
@@ -252,6 +253,8 @@ public class Parser {
 
     }
 
+    public static void SaveJS(JS js, String path){
 
+    }
 
 }
