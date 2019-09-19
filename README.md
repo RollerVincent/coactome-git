@@ -16,8 +16,8 @@ download experimental data and process statistics. This command takes some time.
 cd git-coactome/preprocessing
 python3 data.py -pre mouse_differential.experiments.csv
 ```
-In the entire analysis, mouse_differential can be replaced by human_differential.\ 
-The data is saved to coactome-root/data/experiments/mouse_differential
+In the entire analysis, mouse_differential can be replaced by human_differential.
+The data is saved to <br />coactome-root/data/experiments/mouse_differential<br />
 Along the downlowd of the experimental data from [ExpressionAtlas](https://www.ebi.ac.uk/gxa/home), the files gene_list.txt and gene_fc.txt are generated.
 
 Java project located at coactome-root/git-coactome/java.
