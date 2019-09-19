@@ -21,7 +21,7 @@ The data is saved to
 > coactome-root/data/experiments/mouse_differential
 
 Along with the download of the experimental data from [ExpressionAtlas](https://www.ebi.ac.uk/gxa/home), two files are generated.
-(gene_list.txt and gene_fc.txt)
+</br>(gene_list.txt and gene_fc.txt)
 
 Java project located at 
 > coactome-root/git-coactome/java
