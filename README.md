@@ -1,7 +1,7 @@
-# git-coactome
+#git-coactome
 
 
-* Setup
+##Setup
 
 
 create root directory e.g.  coactome-root  and clone the repository.
@@ -17,7 +17,7 @@ python3 data.py -pre mouse_differential.experiments.csv
 ```
 In the entire analysis, mouse_differential can be replaced by human_differential.
 The data is saved to coactome-root/data/experiments/mouse_differential
-Along the downlowd of the experimental data from ExpressionAtlas (https://www.ebi.ac.uk), the files gene_list.txt and gene_fc.txt are generated.
+Along the downlowd of the experimental data from [ExpressionAtlas](https://www.ebi.ac.uk/gxa/home), the files gene_list.txt and gene_fc.txt are generated.
 
 Java project located at coactome-root/git-coactome/java.
 
