@@ -20,7 +20,8 @@ In the entire analysis, mouse_differential can be replaced by human_differential
 The data is saved to
 > coactome-root/data/experiments/mouse_differential
 
-Along with the download of the experimental data from [ExpressionAtlas](https://www.ebi.ac.uk/gxa/home), two files are generated. (gene_list.txt and gene_fc.txt)
+Along with the download of the experimental data from [ExpressionAtlas](https://www.ebi.ac.uk/gxa/home), two files are generated.
+(gene_list.txt and gene_fc.txt)
 
 Java project located at 
 > coactome-root/git-coactome/java
