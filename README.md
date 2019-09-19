@@ -1,7 +1,7 @@
-#git-coactome
+# git-coactome
 
 
-##Setup
+## Setup
 
 
 create root directory e.g.  coactome-root  and clone the repository.
@@ -22,7 +22,7 @@ Along the downlowd of the experimental data from [ExpressionAtlas](https://www.e
 Java project located at coactome-root/git-coactome/java.
 
 
-##Fold Change Ratio Analysis
+## Fold Change Ratio Analysis
 
 The fold change ratio analysis (FCRA) detects statistical significance between two genes analysing the log fold change ratio distribution of the genes.
 
