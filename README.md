@@ -13,7 +13,7 @@ git clone https://github.com/RollerVincent/coactome-git.git
 
 download experimental data and process statistics. This command takes some time.
 ```
-cd git-coactome/preprocessing
+cd coactome-git/preprocessing
 python3 data.py -pre mouse_differential.experiments.csv
 ```
 In the entire analysis, mouse_differential can be replaced by human_differential.
@@ -24,7 +24,7 @@ Along with the download of the experimental data from [ExpressionAtlas](https://
 </br>(gene_list.txt and gene_fc.txt)
 
 Java project located at 
-> coactome-root/git-coactome/java
+> coactome-root/coactome-git/java
 
 
 
