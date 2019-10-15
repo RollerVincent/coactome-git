@@ -11,6 +11,7 @@ public class FcraNetwork {
         argParser.addOption("-mean", true, false, "minimal FCR mean");
         argParser.addOption("-varz", true, false, "maximal FCR variance Z score");
         argParser.addOption("-rmc", true, true, "removal cost for clustering");
+        argParser.addOption("-bidirectional", true, false, "include only bidirectional links");
 
 
         // FCRA_Network("../../results/mouse_differential/fcra", 1e-13, 0.25, -3, 50);
@@ -20,7 +21,7 @@ public class FcraNetwork {
             if(argParser.hasArgument("-rmc")){
                 removalCost = Integer.valueOf(argParser.getArgument("-rmc"));
             }
-            Main.FCRA_Network(argParser.getArgument("-fcra"), Double.valueOf(argParser.getArgument("-fdr")), Double.valueOf(argParser.getArgument("-mean")), Double.valueOf(argParser.getArgument("-varz")), removalCost);
+            Main.FCRA_Network(argParser.getArgument("-fcra"), Double.valueOf(argParser.getArgument("-fdr")), Double.valueOf(argParser.getArgument("-mean")), Double.valueOf(argParser.getArgument("-varz")), removalCost, Boolean.valueOf(argParser.getArgument("-bidirectional")));
         }
     }
 }

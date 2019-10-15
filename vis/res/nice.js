@@ -947,33 +947,39 @@ class Display {
 	
 	constructor(container){
 		this.container = document.getElementById(container);
-		this.container.innerHTML = '<div id = "infoDiv" style = "display:inline-block;"></div><div id = "displayDiv" style = "display:inline-block; vertical-align:top;"></div><div id = "footerDiv"></div>';
+		this.container.innerHTML = '<div id = "infoDiv" style = "display:inline-block;"></div><div id = "displayDiv" style = "box-shadow:0px 0px 5px rgb(0,0,0) inset; border-radius:10px; background:rgb(53,53,53); display:inline-block; vertical-align:top;"></div><div id = "footerDiv"></div>';
 		
 		this.infoBoxWidth = 300;
+		this.activeTool = 0;
 		this.initDivs();
-		this.redimensionDivs();
+		this.redimensionDivs(true);
 
 		this.initSvg();
+
+		console.log("fu");
 	}
+
 
 	initDivs(){
 		this.infoDiv = document.getElementById("infoDiv");
-		this.infoDiv.style.borderRadius = "5px";
-		this.infoDiv.style.boxShadow = "0px 0px 8px rgb(20,24,27) inset";
-		this.infoDiv.style.margin = "5px";
+		this.infoDiv.style.borderRadius = "10px";
+		this.infoDiv.style.boxShadow = "0px 0px 5px rgb(5,9,12) inset";
+		this.infoDiv.style.margin = "10px";
+		this.infoDiv.style.marginRight = "5px";
+		this.infoDiv.style.background = "rgb(200,204,207)";
 		this.infoDiv.style.textAlign = "center";
-		this.infoDiv.style.overflow = "scroll";
+		//this.infoDiv.style.overflow = "scroll";
 
 
 
 		this.displayDiv = document.getElementById("displayDiv");
-		this.displayDiv.style.margin = "5px";
+		this.displayDiv.style.marginTop = "10px";
 
 		this.footerDiv = document.getElementById("footerDiv");
 		this.footerDiv.style.borderRadius = "5px";
-		this.footerDiv.style.height = "40px";
-		this.footerDiv.style.background = "rgb(30,34,37)";
-		this.footerDiv.style.marginLeft = "5px";
+		this.footerDiv.style.height = "5px";
+		this.footerDiv.style.background = "rgb(20,24,27)";
+		this.footerDiv.style.marginLeft = "10px";
 		this.footerDiv.style.padding = "5px";
 
 
@@ -981,16 +987,26 @@ class Display {
 
 	}
 
-	redimensionDivs(){
-		this.maxDimension = Math.min(window.innerWidth, window.innerHeight - 30);
+
+	redimensionDivs(mode = false){
+		this.maxDimension = Math.min(window.innerWidth, window.innerHeight);
 		if(this.maxDimension >= window.innerWidth - this.infoBoxWidth){
 			this.maxDimension = window.innerWidth - this.infoBoxWidth;
 		}
-		this.displayDiv.style.width = this.maxDimension - 15 + "px";
-		this.displayDiv.style.height = this.maxDimension - 10 + "px";
-		this.infoDiv.style.width = (this.infoBoxWidth - 10) + "px";
-		this.infoDiv.style.height = (window.innerHeight - 30 - 10) + "px";
+	//	this.displayDiv.style.width = this.maxDimension - 30 + "px";
+	//	this.displayDiv.style.height = this.maxDimension - 20 + "px";
+
+		this.displayDiv.style.width = (window.innerWidth - (this.infoBoxWidth + 5))  + "px";
+		this.displayDiv.style.height = (window.innerHeight - (10 + 10))  + "px";
+
+		this.infoDiv.style.width = (this.infoBoxWidth - 20) + "px";
+		this.infoDiv.style.height = (window.innerHeight - 20) + "px";
+
+		if(!mode){
+			document.getElementById('selection').style.height = (window.innerHeight - 20 - 120) + "px";
+		}
 	}
+
 
 	initSvg(){
 		this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1002,6 +1018,7 @@ class Display {
 		this.center = {"x": this.width / 2.0, "y": this.height / 2.0};
 		this.bounds = {"left": 10000000000, "bottom": -10000000000, "right": -10000000000, "top": 10000000000};
 	}
+
 
 	network(data){
 
@@ -1041,10 +1058,10 @@ class Display {
 			}
 
 		});
-		display.bounds.left -= 20;
-		display.bounds.right += 20;
-		display.bounds.top -= 20;
-		display.bounds.bottom += 20;
+		display.bounds.left -= 40;
+		display.bounds.right += 40;
+		display.bounds.top -= 40;
+		display.bounds.bottom += 40;
 
 
 
@@ -1084,6 +1101,7 @@ class Display {
 		this.nodes.forEach(node => {
 			node.circle = display.circle(node.wx, node.wy, 1 * display.scalefactor, "#aaaaaa", 1);
 			node.currentRadius = 1;
+			node.links = [];
 		});
 
 
@@ -1095,6 +1113,19 @@ class Display {
 				display.clusters[node.cluster] = [];
 			}
 			display.clusters[node.cluster].push(node);
+		});
+		
+		//---------------------------------------------------------------- setup node-links
+		
+		this.links.forEach(link => {
+			if(!display.nodes[link.src].links.includes(display.nodes[link.dst])){
+				display.nodes[link.src].links.push(display.nodes[link.dst]);
+			}
+			
+			if(!display.nodes[link.dst].links.includes(display.nodes[link.src])){
+				display.nodes[link.dst].links.push(display.nodes[link.src]);
+			}
+
 		});
 
 
@@ -1113,16 +1144,12 @@ class Display {
 
 		display.svg.addEventListener('mousemove',function(evt){
 			var loc = cursorPoint(evt);
-			// Use loc.x and loc.y here
-
 			var mindist = 10;
 			mindist *= mindist;
-
 			var nearest;
 			var dx;
 			var dy;
 			var dist;
-			
 			display.nodes.forEach(node => {
 				dx = node.wx - loc.x;
 				dy = node.wy - loc.y;
@@ -1133,63 +1160,110 @@ class Display {
 				}
 			});
 
-			if(nearest != undefined){
+			if(display.activeTool == 1){
 
-				if(clusterHover != nearest.cluster){
+				if(nearest != undefined){
+
+					if(clusterHover != nearest.cluster){
+						if(display.clusterClick != clusterHover){
+							display.unSelectCluster(clusterHover);
+						}
+						
+						clusterHover = nearest.cluster;
+						display.selectCluster(clusterHover);
+					}
+
+				}else{
 					if(display.clusterClick != clusterHover){
-						unSelectCluster(clusterHover);
+						display.unSelectCluster(clusterHover);
+					}
+					clusterHover = undefined;
+				}
+
+			}
+
+			display.nodeHover;
+			if(display.activeTool == 0){
+
+				if(nearest != undefined){
+
+					if(display.nodeHover != nearest){
+						
+						if(display.nodeHover != undefined){
+							display.deactivateNode(display.nodeHover);
+						}
+						
+						display.activateNode(nearest);
+						
+						
+						display.nodeHover = nearest;
 					}
 					
-					clusterHover = nearest.cluster;
-					selectCluster(clusterHover);
+
+				}else{
+					if(display.nodeHover != undefined){
+						display.deactivateNode(display.nodeHover);
+					}
+					display.nodeHover = undefined;
 				}
 
-			}else{
-				if(display.clusterClick != clusterHover){
-					unSelectCluster(clusterHover);
-				}
-				clusterHover = undefined;
+
+
 			}
+
+
 
 
 
 
 		},false);
 
+		display.activeClusters = [];
+
 		display.svg.addEventListener("click", function(evt){
 
-			if(clusterHover != undefined){
-				
-				display.clusterBackground.innerHTML = "";
-				
-				
-				display.clusters[clusterHover].forEach(node => {
-					var circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-					circ.setAttributeNS(null, "cx", node.wx);
-					circ.setAttributeNS(null, "cy", node.wy);
-					circ.setAttributeNS(null, "r", (node.radius + 5) * display.scalefactor);
-					circ.setAttributeNS(null, "fill", "rgb(30,34,37)");
-					circ.setAttribute("opacity", 1);
-
-
-					display.clusterBackground.appendChild(circ);
-				});
-
-				if(display.clusterClick != undefined){
-					unSelectCluster(display.clusterClick);
+			if(display.activeTool == 1){
+				if(!display.activeClusters.includes(clusterHover)){
+					if(clusterHover != undefined){
+					
+						//display.clusterBackground.innerHTML = "";
+						
+						
+						display.clusters[clusterHover].forEach(node => {
+							var circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+							circ.setAttributeNS(null, "cx", node.wx);
+							circ.setAttributeNS(null, "cy", node.wy);
+							circ.setAttributeNS(null, "r", (node.radius + 8) * display.scalefactor);
+							circ.setAttributeNS(null, "fill", "rgb(30,34,37)");
+							circ.setAttribute("opacity", 1);
+		
+		
+							display.clusterBackground.appendChild(circ);
+						});
+		
+						/*if(display.clusterClick != undefined){
+							unSelectCluster(display.clusterClick);
+						}*/
+						display.clusterClick = clusterHover;
+						
+						display.activeClusters.push(clusterHover);
+						
+						
+						display.clusterInfoDiv();
+					}else{
+					/*	if(display.clusterClick != undefined){
+							unSelectCluster(display.clusterClick);
+							display.networkInfoDiv();
+						}*/
+					//	display.clusterClick = undefined;
+					//	display.clusterBackground.innerHTML = "";
+		
+						
+					}
 				}
-				display.clusterClick = clusterHover;
-				display.clusterInfoDiv();
-			}else{
-				if(display.clusterClick != undefined){
-					unSelectCluster(display.clusterClick);
-					display.networkInfoDiv();
-				}
-				display.clusterClick = undefined;
-				display.clusterBackground.innerHTML = "";
 
-				
 			}
+			
 
 
 
@@ -1197,39 +1271,65 @@ class Display {
 		});
 
 		
-		function selectCluster(c){
+		this.selectCluster = function selectCluster(c){
 			setTimeout(function(){
 				if (clusterHover == c){
 					var count = 0;
 					var s = display.clusters[c].length * 1.0;
 					display.clusters[c].forEach(node => {
-						setTimeout(function(){
+						
 							node.currentRadius = node.radius * 0.9;							
 							node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
-						}, (count * 100) / s);
-						count += 1;
+						
 					});
 				}
 			}, 0);
 		}
 
-		function unSelectCluster(c){
-			setTimeout(function(){
-				if(c != undefined){
-					if(c != clusterHover){
-						var count = 0;
-						var s = display.clusters[c].length * 1.0;
-						display.clusters[c].forEach(node => {
-							setTimeout(function(){
-								node.currentRadius = 1;							
-								node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
-							}, (count * 100) / s);
-							count += 1;
-						});
+		this.unSelectCluster = function unSelectCluster(c, t=500){
+			if(!display.activeClusters.includes(c)){
+				setTimeout(function(){
+					if(c != undefined){
+						if(c != clusterHover){
+							var count = 0;
+							var s = display.clusters[c].length * 1.0;
+							display.clusters[c].forEach(node => {
+								
+									node.currentRadius = 1;	
+									if(display.activeTool == 0){
+										node.circle.setAttribute("r", node.radius * 0.7 * display.scalefactor);
+									}else{
+										node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
+									}						
+									
+								
+							});
+						}
 					}
-				}
-			}, 500);
+				}, t);
+			}
 		}
+
+		this.activateNode = function(node){
+			node.circle.setAttribute("r", node.radius * display.scalefactor);
+			node.circle.setAttribute("stroke", "rgb(0,0,0)");
+			node.links.forEach(neighb => {
+				neighb.circle.setAttribute("r", neighb.radius * display.scalefactor);
+				neighb.circle.setAttribute("stroke", "rgb(0,0,0)");
+
+			});
+		};
+
+		this.deactivateNode = function(node){
+			node.circle.setAttribute("r", node.radius * 0.7 * display.scalefactor);
+			node.circle.setAttribute("stroke", node.color);
+
+			node.links.forEach(neighb => {
+				neighb.circle.setAttribute("r", neighb.radius * 0.7 * display.scalefactor);
+				neighb.circle.setAttribute("stroke", neighb.color);
+
+			});
+		};
 
 		//---------------------------------------------------------------- on window resizing
 
@@ -1245,82 +1345,286 @@ class Display {
 		this.networkInfoDiv();
 	}
 
+
 	networkInfoDiv(){
+
+		
+
 		var nodeCount = this.nodes.length;
 		var linkCount = this.links.length;
 		var clusterCount = Object.keys(this.clusters).length;
 
-		this.infoDiv.innerHTML = "<div style = 'font-size:20px; margin:10px; color:rgb(10,13,17);'> GRAPH </div>";
-		this.infoDiv.innerHTML += "<div id = 'toolDiv'></div>";
-		this.infoDiv.innerHTML += "<div style = 'margin-left:5px; width:"+(this.infoBoxWidth-20)+"px; height:3px; background:rgb(10,13,17);'></div>";
 
+		this.infoDiv.innerHTML = "<div style = 'font-family:Courier New; font-size:22px; margin:10px; margin-bottom:5px; color:rgb(10,13,17);'> G R A P H </div>";
 
+		
 
 		var infoContent = "";
 
-		infoContent += "<div style = 'font-size:16px; text-align:left; margin-top:15px; margin-left:15px; font-family:Courier New;'>Nodes &nbsp;&nbsp;&nbsp;:  "+nodeCount+"<br>Links &nbsp;&nbsp;&nbsp;:  "+linkCount+"<br>Clusters :  "+clusterCount+"</div>";
+		infoContent += "<div style = 'color:rgb(90,90,90); margin-bottom:2px; font-family:Courier New;'><span style = ' padding-top:2px; font-size:10px;  background:rgb(190,190,190); border-radius:10px;'>&nbsp;<b>"+nodeCount+"</b> nodes&nbsp;</span> <span style = 'padding-top:2px; font-size:10px;  background:rgb(190,190,190); border-radius:10px;'>&nbsp;<b>"+linkCount+"</b> links&nbsp;</span> <span style = 'padding-top:2px; font-size:10px;  background:rgb(190,190,190); border-radius:10px;'>&nbsp;<b>"+clusterCount+"</b> clusters&nbsp;</span></div>";
 
-		infoContent += "<div style = 'font-family:Courier New; margin-top:25px; font-size:22px; text-shadow:0 0 10px rgb(20,23,27); color:rgb(50,53,57);'> NO SELECTION </div>";
+		infoContent += "<div style = 'margin-left:5px; margin-bottom:15px; width:"+(this.infoBoxWidth-30)+"px; height:3px; background:rgb(10,13,17);'></div>";
 
+		infoContent += this.toolDiv();
+
+
+		infoContent += "<div style = 'margin-left:5px; margin-bottom:2px; width:"+(this.infoBoxWidth-30)+"px; height:3px; background:rgb(10,13,17);'></div>";
+
+
+
+		
 
 		this.infoDiv.innerHTML += "<div id = 'infoContentDiv'>"+infoContent+"</div>";
 		
+		this.infoDiv.innerHTML += "<div id = 'selection' style='height:"+(this.height-120)+"px; overflow-y:scroll;'><div style = 'margin:bottom:10px; font-family:Courier New; margin-top:30px; font-size:20px;  color:rgb(180,180,180);'><b>NOTHING SELECTED</b></div></div>";
+
+	
+		this.toolClick(0);
+
+
+	}
+
+	experimentLoader(){
+		var selection = document.getElementById('selection');
+
+		selection.innerHTML = "<div>";
+
+		selection.innerHTML += "<span style = 'font-size:12px; font-family:Courier New;'>Source<input id = 'experiment_input' style = 'margin:5px; margin-top:10px; font-family:Courier New; border-radius:5px;'></input><span onclick = 'display.loadExperiment()' style = 'padding:2px; border:1px solid rgb(60,60,60); cursor:pointer; font-size:12px; border-radius:5px;'>load</span></span>";
+
+        
+		selection.innerHTML += "</div>";
+		selection.innerHTML += "<div id = 'experiment_selection'></div>";
+
+
+		document.getElementById("experiment_input").value = "../Home/Development/Coactome/data/experiments/mouse_differential/E-GEOD-61636/experiment.js";
 
 
 
 	}
+	loadExperiment(){
+		var display = this;
+		var selection = document.getElementById('experiment_selection');
+
+
+		nice.load(document.getElementById("experiment_input").value, function(){
+
+			display.experiment = experiment;
+
+			for (const assay in experiment) {
+				console.log(assay);
+				var ia = "";
+				var seg = assay.split(".");
+				seg[0].split("'").forEach( s => {
+					if(s == " vs "){
+						s = "<b>vs</b>";
+					}
+					ia += "<div>" + s + "</div>";
+				});
+				ia += "<div><b><br>" + seg[1] + "</b></div>";
+				selection.innerHTML += '<div onmouseover = "display.assayIn(\''+assay.replace(/'/g,"x__x")+'\')" style = "cursor:pointer; border-radius:15px; font-size:13px; font-family:Courier New; margin:10px; padding:3px; border:1px solid rgb(60,60,60);">'+ia+'</div>';
+				
+			
+			
+			}
+
+
+		});
+
+	}
+
+	assayIn(assay){
+		var values = this.experiment[assay.replace(/x__x/g,"'")];
+		
+		var min = Number.MAX_SAFE_INTEGER;
+		var max = -Number.MAX_SAFE_INTEGER;
+
+		
+		this.nodes.forEach(node => {
+			node.circle.setAttribute("fill", "rgb(100,100,100");
+			if(values[node.id] != undefined){
+				if(values[node.id] > max){
+					max = values[node.id];
+				}
+				if(values[node.id] < min){
+					min = values[node.id];
+				}
+			}
+		});
+
+		this.nodes.forEach(node => {
+			if(values[node.id] != undefined){
+				console.log("fufuff");
+
+				var frag;
+				if(assay.split(".")[1] == "foldChange"){
+					if(values[node.id] <= 0){
+						frag = (values[node.id]) / (min);
+						node.circle.setAttribute("fill", "rgb(0,0," + (255*frag) + ")");
+					}
+					else{
+						frag = (values[node.id]) / (max);
+						node.circle.setAttribute("fill", "rgb(" + (255*frag) + ",0,0)");
+					}
+				}else{
+					if (values[node.id] < 0.05){
+						//node.circle.setAttribute("stroke", "rgb(0,0,0)");
+					}
+					frag = (values[node.id] - min) / (max-min);
+					node.circle.setAttribute("fill", "rgb(" + (255*(1-frag)) + ",0,0)");
+				}
+
+				
+				
+
+
+			}
+		});
+
+
+
+	}
+
+	toolClick(id){
+
+		var display = this;
+
+		document.getElementById('tool0').style.boxShadow = '';
+		document.getElementById('tool1').style.boxShadow = '';
+		document.getElementById('tool2').style.boxShadow = '';
+		
+		var elem = document.getElementById('tool' + id);
+		elem.style.boxShadow = '0px 0px 5px rgb(40,40,40)';
+
+
+		if(id == 0){
+			this.nodes.forEach(node => {
+				node.circle.setAttribute("r", Math.max(node.radius * 0.7, 1) * display.scalefactor);
+			});
+			display.activeTool = 0;
+		}
+		if(id == 1){
+			this.nodes.forEach(node => {
+				node.circle.setAttribute("r", node.currentRadius * 0.9 * display.scalefactor);
+			});
+			display.activeTool = 1;
+		}
+		if(id == 2){
+			this.nodes.forEach(node => {
+				node.circle.setAttribute("r", Math.max(node.radius * 0.7, 1) * display.scalefactor);
+				node.circle.setAttribute("fill", "rgb(100,100,100)");
+			});
+			this.links.forEach(link => {
+				link.rect.setAttribute("fill", "rgb(100,100,100)");
+			});
+			display.activeTool = 2;
+			console.log("maio");
+			display.experimentLoader();
+		}
+
+
+	}
+
+	toolDiv(){
+		var tools = "<div id = 'tool0' onclick = 'display.toolClick(0)' style = 'cursor:pointer; text-align:center; display:inline-block; color:rgb(60,60,60); border:solid 1px rgb(60,60,60); font-size:20px; line-height:25px; margin:5px; margin-bottom:3px; width:25px; height:25px; border-radius:25px; '>&#9906;</div>";
+		tools += "<div id = 'tool1' onclick = 'display.toolClick(1)' style = 'cursor:pointer; text-align:center; display:inline-block; color:rgb(60,60,60); border:solid 1px rgb(60,60,60); font-size:20px; line-height:25px; margin:5px; margin-bottom:3px; width:25px; height:25px; border-radius:25px; '>&#10070;</div>";
+		tools += "<div id = 'tool2' onclick = 'display.toolClick(2)' style = 'cursor:pointer; text-align:center; display:inline-block; color:rgb(60,60,60); border:solid 1px rgb(60,60,60); font-size:20px; line-height:25px; margin:5px; margin-bottom:3px; width:25px; height:25px; border-radius:25px; '>&#9880;</div>";
+		
+		return "<div style = 'text-align:left; margin-left:10px;'>"+tools+"</div>";
+	}
+	
+	deleteInfo(id){
+		var display = this;
+		document.getElementById(id).remove();
+		display.clusterClick = undefined;
+
+		var split = id.split('_');
+
+		if(split[0] == 'cluster'){
+			this.unSelectCluster(split[1], 0);
+			this.clusterBackground.innerHTML = '';
+
+			var ac = [];
+			this.activeClusters.forEach(c => {
+				if(c!=split[1]){
+					ac.push(c);
+				}
+			});
+			this.activeClusters = ac;
+
+			this.activeClusters.forEach(cluster => {
+				display.clusters[cluster].forEach(node => {
+					var circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					circ.setAttributeNS(null, "cx", node.wx);
+					circ.setAttributeNS(null, "cy", node.wy);
+					circ.setAttributeNS(null, "r", (node.radius + 8) * display.scalefactor);
+					circ.setAttributeNS(null, "fill", "rgb(30,34,37)");
+					circ.setAttribute("opacity", 1);
+					display.clusterBackground.appendChild(circ);
+				});
+			});
+			
+		}
+
+	}
+
 
 	clusterInfoDiv(){
 
 		var count = this.clusters[this.clusterClick].length;
 
+		var selection = document.getElementById('selection');
 
-
-		this.infoDiv.innerHTML = "<div style = 'font-size:18px; margin:10px; color:rgb(10,13,17);'> CLUSTER </div>";
-		this.infoDiv.innerHTML += "<div id = 'toolDiv'></div>";
-		this.infoDiv.innerHTML += "<div style = 'margin-left:5px; width:"+(this.infoBoxWidth-20)+"px; height:3px; background:rgb(10,13,17);'></div>";
-
-
+		var infoId = "cluster_"+this.clusterClick;
 
 		var infoContent = "";
 
-		infoContent += "<div style = 'font-size:16px; text-align:left; margin-top:15px; margin-left:15px; font-family:Courier New;'>Name : "+this.clusterClick+"<br>Size :  "+count+"<br></div>";
+
+		infoContent += "<div style = 'float:left; margin:0px; height:10px; width:10px; border-radius:10px; background:"+this.clusters[this.clusterClick][0].circle.getAttribute("fill")+";'></div>"
+		infoContent += "<div onclick = 'display.deleteInfo(\""+infoId+"\")'style = 'float:right; margin:0px; height:5px; width:5px; border-radius:5px; border:solid 2px rgb(210,160,160); cursor:pointer'></div>"
+
+		infoContent += "<div style = 'font-size:12px; text-align:left; margin-top:10px; margin-left:15px; font-family:Courier New;'>Name : "+this.clusterClick+"<br>Size :  "+count+"<br></div>";
 		
 		if(this.go != undefined){
 			var goInfo = "";
-			infoContent += "<div style = 'font-size:16px; text-align:left; margin-left:15px; font-family:Courier New;'><br>GO Association</div>";
+			infoContent += "<div style = 'font-size:12px; text-align:left; margin-left:15px; font-family:Courier New;'><br>GO Associations</div>";
 
 			var gos = display.clusterInfo(display.clusterClick);
 			gos.forEach(go => {
 				var name = display.go[go.name];
 				
-	
-				goInfo += "<div style = 'font-size:15px;'><b>" + (go.value/count).toFixed(2) + "</b>("+go.value+")</div>";
-				goInfo += "<div onmouseout = 'display.goHoverOut("+go.name+")' onmouseenter = 'display.goHoverIn("+go.name+")' style = 'cursor:pointer; font-size:14px; padding-left:5px; padding-right:5px; border:1px solid rgb(38,41,45); margin-bottom:10px; margin-top:1px;'>"+name+"</div>"
+				goInfo += "<div style = 'font-size:11px; color:rgb(80,80,80);'><b>" + (go.value/count).toFixed(2) + "</b>("+go.value+")</div>";
+				goInfo += "<div onmouseout = 'display.goHoverOut(\""+go.name+"\")' onmouseenter = 'display.goHoverIn(\""+go.name+"\")' style = 'cursor:pointer; font-size:14px; padding-left:5px; padding-right:5px; border:1px solid rgb(185,188,192); margin-bottom:15px; margin-top:1px;'>"+name+"</div>"
 			});
 			
 			
-			infoContent += "<div style = 'height:"+(200)+"px; border-radius:5px;  overflow-y:scroll; color:rgb(20,23,27); font-family:Courier New; text-align:left; padding:10px; margin-top:1px; margin-left:15px; width:"+(this.infoBoxWidth-60)+"px; background:rgb(43,46,50);'>"+goInfo+"</div>";
+			infoContent += "<div style = 'height:"+(100)+"px; border-radius:5px;  overflow-y:scroll; color:rgb(20,23,27); font-family:Courier New; text-align:left; padding:10px; margin-top:1px; margin-left:15px; margin-right:10px; margin-bottom:0px; background:rgb(200,204,207);'>"+goInfo+"</div>";
 	
 	
 		}
 		
-
-		this.infoDiv.innerHTML += "<div id = 'infoContentDiv' style = 'height:100%;'>"+infoContent+"</div>";
+		if(selection.innerText == "NOTHING SELECTED"){
+			selection.innerHTML = '';
+		}
+		selection.innerHTML += "<div id = '"+infoId+"' style = 'border-radius:10px; margin:10px; padding:5px; background:rgb(191,194,195);'>"+infoContent+"</div>";
 	}
+
 
 	goHoverIn(id){
-		var display = this;
-		this.nodes.forEach(node => {
-			if(node.attributes.includes(id)){
-				node.circle.setAttribute("stroke", node.color);
-				node.circle.setAttribute("fill", "rgb(40,43,47)");
-				
-				node.circle.setAttribute("r", node.radius * display.scalefactor);
+		setTimeout(() => {
+			var display = this;
+			this.nodes.forEach(node => {
+				if(node.attributes.includes(id)){
+					node.circle.setAttribute("stroke", node.color);
+					node.circle.setAttribute("fill", "rgb(40,43,47)");
+					
+					node.circle.setAttribute("r", node.radius * display.scalefactor);
 
-			}
-		});
+				}
+			});
+		}, 0);
+		
 	}
+
 
 	goHoverOut(id){
 
@@ -1330,11 +1634,16 @@ class Display {
 				node.circle.setAttribute("stroke", "none");
 				node.circle.setAttribute("fill", node.color);
 
-				node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
-
+				if(display.activeTool == 0){
+					node.circle.setAttribute("r", node.radius * 0.7 * display.scalefactor);
+				}else{
+					node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
+				}
+				
 			}
 		});
 	}
+
 
 	replaceNodes(){
 		var display = this;
@@ -1348,27 +1657,33 @@ class Display {
 		var maxd = Math.max(display.bounds.right - display.bounds.left, display.bounds.bottom - display.bounds.top);
 		display.scalefactor = minl / maxd;	
 		this.nodes.forEach(node => {
-			node.wx = (node.x - display.bounds.left) * display.scalefactor;
-			node.wy = (node.y - display.bounds.top) * display.scalefactor;
+			node.wx = (node.x - display.bounds.left) * display.scalefactor + (display.width/2 - minl/2);
+			node.wy = (node.y - display.bounds.top) * display.scalefactor + (display.height/2 - minl/2);
 			
 			 
 		});
 
 	}
 
+
 	redrawNodes(){
+		var display = this;
 		this.nodes.forEach(node => {
 		
 			node.circle.setAttribute("cx", node.wx);
 			node.circle.setAttribute("cy", node.wy);
-			node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
+			if(display.activeTool == 0){
+				node.circle.setAttribute("r", node.radius * 0.7 * display.scalefactor);
+			}else{
+				node.circle.setAttribute("r", node.currentRadius * display.scalefactor);
+			}
+			
 
 			 
 		});
 		display.clusterBackground.innerHTML = "";
 		this.highlightCluster();
 	}
-
 
 
 	highlightCluster(){
@@ -1378,7 +1693,7 @@ class Display {
 				var circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 				circ.setAttributeNS(null, "cx", node.wx);
 				circ.setAttributeNS(null, "cy", node.wy);
-				circ.setAttributeNS(null, "r", (node.radius + 5) * display.scalefactor);
+				circ.setAttributeNS(null, "r", (node.radius + 8) * display.scalefactor);
 				circ.setAttributeNS(null, "fill", "rgb(30,34,37)");
 				circ.setAttribute("opacity", 1);
 				display.clusterBackground.appendChild(circ);
@@ -1386,6 +1701,7 @@ class Display {
 		}
 		
 	}
+
 
 	redrawLinks(){
 		var display = this;
@@ -1421,7 +1737,6 @@ class Display {
 	}
 
 	
-
 	sizes(){
 		this.nodes.forEach(node => {
 			node.size = node.radius;
@@ -1432,10 +1747,6 @@ class Display {
 	}
 
 	
-	
-
-
-
 	circle(x, y, r, c, a){
 		var circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 		circ.setAttributeNS(null, "cx", x);
@@ -1446,6 +1757,7 @@ class Display {
         this.svg.appendChild(circ);
         return circ;
 	}
+
 
 	rect(w, h, x, y, c, a){
 		var r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -1458,6 +1770,7 @@ class Display {
         this.svg.appendChild(r);
         return r;
 	}
+
 	
 	cluster_colors(){
 		
@@ -1499,24 +1812,6 @@ class Display {
 		
 	}
 
-	factorielle(a){
-
-		var aa = a;
-		var b = 1;
-		while (a>1){
-			b *= a;
-			a -= 1;
-		}
-		if(b == Infinity){
-			b = Number.MAX_SAFE_INTEGER; 
-		}
-		return b;
-	}
-	  
-	  
-	combination(n, r) {
-		return 1.0 * this.factorielle(n) / (this.factorielle(r) * this.factorielle(n - r));
-	}
 
 	clusterInfo(c){  // statistics.....
 

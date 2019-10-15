@@ -71,7 +71,8 @@ public class Simulation {
             FPP = totalEnergy() / N;
 
 
-            System.out.print("\r FPP    :     " + FPP);
+           // System.out.print("\r FPP    :     " + FPP);
+            System.out.println(" FPP    :     " + FPP);
 
         }
 
@@ -253,6 +254,69 @@ public class Simulation {
         js.addStructure("links");
 
         HashMap<String, String> map;
+
+        if(GoTerms != null){
+            js.addStructure("go");
+
+            try{
+
+                BufferedReader reader = Parser.GzipReader(GoTerms);
+                String line = reader.readLine();
+                String[] split;
+                HashMap<String, String> gos = new HashMap<>();
+                while((line = reader.readLine()) != null){
+
+
+
+
+                    split = line.split("\t");
+
+                    if(split.length > 2){
+                        if(split[3].equals("biological_process") || split[3].equals("cellullar_component")){
+                            gos.put(split[1].substring(3), split[2]);
+                        }
+                    }
+                }
+
+
+                HashMap<String, String> usedGo = new HashMap<>();
+
+                for (int i = 0; i < N; i++) {
+                    if(system.particles[i].attributes.length() > 2) {
+                        String attr = "[";
+                        for (String go : system.particles[i].attributes.substring(1, system.particles[i].attributes.length() - 1).split(", ")) {
+
+                            if(gos.containsKey(go)) {
+                                usedGo.put(go, gos.get(go));
+                                attr += "\"" + go + "\",";
+                            }
+
+                        }
+                        if(attr.length()>1){
+                            attr = attr.substring(0, attr.length());
+                        }
+                        attr += "]";
+                        system.particles[i].attributes = attr;
+                    }
+                }
+
+                for (String go: usedGo.keySet()) {
+                    map = new HashMap<>();
+                    map.put("id", "\"" + go + "\"");
+                    map.put("name", "\"" + usedGo.get(go) + "\"");
+                    js.updateStructure("go", map);
+                }
+
+                System.out.println("\n " + usedGo.size() + " related GO terms. Total: " + gos.size());
+
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+        }
+
+
         for (int i = 0; i < N; i++) {
             map = new HashMap<>();
             map.put("id", "\"" + system.particles[i].id + "\"");
@@ -275,55 +339,7 @@ public class Simulation {
             }
         }
 
-        if(GoTerms != null){
-            js.addStructure("go");
 
-            try{
-
-                BufferedReader reader = Parser.GzipReader(GoTerms);
-                String line = reader.readLine();
-                String[] split;
-                HashMap<String, String> gos = new HashMap<>();
-                while((line = reader.readLine()) != null){
-
-
-
-
-                    split = line.split("\t");
-
-                    if(split.length > 2){
-                        gos.put(split[1].substring(3), split[2]);
-                    }
-                }
-
-
-                HashMap<String, String> usedGo = new HashMap<>();
-
-                for (int i = 0; i < N; i++) {
-                    if(system.particles[i].attributes.length() > 2) {
-                        for (String go : system.particles[i].attributes.substring(1, system.particles[i].attributes.length() - 1).split(", ")) {
-                            if(gos.containsKey(go)) {
-                                usedGo.put(go, gos.get(go));
-                            }
-                        }
-                    }
-                }
-
-                for (String go: usedGo.keySet()) {
-                    map = new HashMap<>();
-                    map.put("id", go);
-                    map.put("name", "\"" + usedGo.get(go) + "\"");
-                    js.updateStructure("go", map);
-                }
-
-                System.out.println("\n " + usedGo.size() + " related GO terms. Total: " + gos.size());
-
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
-        }
 
         js.save("network", path);
     }

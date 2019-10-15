@@ -47,14 +47,20 @@ public class Main {
 
     }
 
-    public static void FCRA_Network(String fcra, double fdr_cutoff, double mean_cutoff, double varz_cutoff, int removalCost){
+    public static void FCRA_Network(String fcra, double fdr_cutoff, double mean_cutoff, double varz_cutoff, int removalCost, boolean bidirectional){
+
+
+
 
         Network network = new Network();
 
         Iterator<Path> files = Parser.FileIterator(fcra);
         int count = 1;
+        int linkCount = 0;
+        int stop = 0;
 
-        while(files.hasNext()){
+        while(files.hasNext() && stop < 1000){
+            //stop += 1;
 
             String path = files.next().toString();
             String[] split = path.split("/");
@@ -62,7 +68,10 @@ public class Main {
             String gene = split[split.length - 2];
 
             if(gene.startsWith("ENS") && split[split.length - 1].equals("results.tsv.zip")) {
-                System.out.printf("\r%s", "Loading :  " + gene + " (" + count + ")  ");
+                //System.out.printf("\r%s", "Loading :  " + gene + " (" + count + ")  ");
+                if(count%100 == 0) {
+                    System.out.println("Loading :  " + gene + " (" + count + ")  ");
+                }
                 count += 1;
                 if (!network.nodes.containsKey(gene)){
                     network.nodes.put(gene, new Node(gene));
@@ -97,7 +106,8 @@ public class Main {
 
                                 Node other_node = network.nodes.get(other);
                                 node.links.add(other_node);
-                                other_node.links.add(node);
+                                linkCount += 1;
+                            //    other_node.links.add(node);
                             }
                         }
                         reader.close();
@@ -116,11 +126,20 @@ public class Main {
         }
         System.out.println();
 
+        System.out.println("Loaded network with "+ network.nodes.size() +" nodes and "+ linkCount +" directed links");
 
-        network.setDoubles();
-        network.removeUndoubled();
 
-        Matrix matrix = network.toMatrix(true);
+
+
+        if(bidirectional){
+            network.setDoubles();
+            network.removeUndoubled();
+        }else{
+            network.removeUnconnected();
+        }
+
+
+        Matrix matrix = network.toMatrix(bidirectional);
 
 
         boolean verified = true;
@@ -160,9 +179,13 @@ public class Main {
 
 
 
+        if(bidirectional){
+            matrix.Save(fcra + "/networks/data/network_fdr_" + fdr_cutoff + "_mean_" + mean_cutoff + "_varz_" + varz_cutoff + "_cost_" + removalCost + "_bidirectional/matrix.txt", false);
+        }else{
+            matrix.Save(fcra + "/networks/data/network_fdr_" + fdr_cutoff + "_mean_" + mean_cutoff + "_varz_" + varz_cutoff + "_cost_" + removalCost + "/matrix.txt", false);
 
+        }
 
-        matrix.Save(fcra + "/networks/data/network_fdr_" + fdr_cutoff + "_mean_" + mean_cutoff + "_varz_" + varz_cutoff + "_cost_" + removalCost + "/matrix.txt", false);
 
 
 

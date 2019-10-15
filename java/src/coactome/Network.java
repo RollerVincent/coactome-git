@@ -40,6 +40,7 @@ public class Network {
             for (Node other: others) {
                 int j = indices.get(other.id);
                 matrix.data[i][j] = 1;
+                matrix.data[j][i] = 1;
             }
         }
 
@@ -50,7 +51,6 @@ public class Network {
         System.out.print("Done\n");
         return matrix;
     }
-
 
     public void setDoubles(){
         System.out.print("Reducing to doubled links... ");
@@ -78,6 +78,33 @@ public class Network {
                 tmp.put(node.id, node);
             }
         }
+        System.out.print("Done, "+ tmp.size() + " of "+ this.nodes.size() +" nodes left\n");
+        this.nodes = tmp;
+    }
+
+    public void removeUnconnected(){
+        System.out.print("Removing unconnected nodes... ");
+        HashMap<String, Node> tmp = new HashMap<>();
+        for (Node node : this.nodes.values()) {
+            if(node.links.size() != 0){
+                tmp.put(node.id, node);
+            }else{
+                for (Node o : this.nodes.values()) {
+                    if(o.links.contains(node)){
+                        tmp.put(node.id, node);
+                        break;
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+
         System.out.print("Done, "+ tmp.size() + " of "+ this.nodes.size() +" nodes left\n");
         this.nodes = tmp;
     }
